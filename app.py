@@ -256,16 +256,33 @@ def check_connectivity(domain):
     return result
 
 
+def lookup_cname(domain):
+    """Look up CNAME record for a domain."""
+    resolver = dns.resolver.Resolver()
+    resolver.timeout = 5
+    resolver.lifetime = 5
+    try:
+        answers = resolver.resolve(domain, 'CNAME')
+        return str(answers[0].target).rstrip('.')
+    except:
+        return None
+
+
 def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
     """Validate DNS configuration for each GHL feature."""
     domain = dns_results.get('domain', '')
     parts = domain.split('.')
     is_subdomain = len(parts) > 2
 
-    # Get current CNAME if any
+    # Get current CNAME for root domain if any
     current_cname = None
     if dns_results.get('cname'):
         current_cname = dns_results['cname'][0] if dns_results['cname'] else None
+
+    # Look up www CNAME separately for root domains
+    www_cname = None
+    if not is_subdomain:
+        www_cname = lookup_cname(f'www.{domain}')
 
     # Build feature-centric validation
     features = {
@@ -297,8 +314,8 @@ def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
                     'type': 'CNAME',
                     'host': 'www',
                     'required': GHL_SITES_CNAME,
-                    'current': current_cname,
-                    'valid': current_cname and GHL_SITES_CNAME in current_cname
+                    'current': www_cname if not is_subdomain else current_cname,
+                    'valid': (www_cname and GHL_SITES_CNAME in www_cname) if not is_subdomain else (current_cname and GHL_SITES_CNAME in current_cname)
                 }
             ]
         },

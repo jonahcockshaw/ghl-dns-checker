@@ -268,7 +268,38 @@ def lookup_cname(domain):
         return None
 
 
-def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
+# Common subdomains to scan for GHL configurations
+COMMON_SUBDOMAINS = [
+    'app', 'crm', 'portal', 'members', 'client', 'clients',
+    'dashboard', 'login', 'admin', 'my', 'account', 'hub',
+    'connect', 'go', 'start', 'get', 'join', 'access'
+]
+
+
+def scan_subdomains(root_domain):
+    """Scan common subdomains to find GHL configurations."""
+    results = {
+        'branded_domain': [],  # Subdomains pointing to brand.ludicrous.cloud
+        'client_portal': [],   # Subdomains pointing to clientportal.ludicrous.cloud
+        'sites_funnels': []    # Subdomains pointing to sites.ludicrous.cloud
+    }
+
+    for subdomain in COMMON_SUBDOMAINS:
+        full_domain = f'{subdomain}.{root_domain}'
+        cname = lookup_cname(full_domain)
+
+        if cname:
+            if GHL_SUBACCOUNT_CNAME in cname:
+                results['branded_domain'].append({'subdomain': full_domain, 'cname': cname})
+            elif GHL_PORTAL_CNAME in cname:
+                results['client_portal'].append({'subdomain': full_domain, 'cname': cname})
+            elif GHL_SITES_CNAME in cname:
+                results['sites_funnels'].append({'subdomain': full_domain, 'cname': cname})
+
+    return results
+
+
+def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None, subdomain_scan=None):
     """Validate DNS configuration for each GHL feature."""
     domain = dns_results.get('domain', '')
     parts = domain.split('.')
@@ -327,7 +358,7 @@ def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
         www_cname = lookup_cname(f'www.{domain}')
 
         features['sites_funnels'] = {
-            'name': 'Sites / Funnels',
+            'name': 'Sites / Funnels (Root Domain)',
             'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/domain',
             'records': [
                 {
@@ -346,6 +377,77 @@ def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
                 }
             ]
         }
+
+        # Add scanned subdomain results for root domains
+        if subdomain_scan:
+            # Branded Domain - show discovered subdomains or indicate none found
+            branded_records = []
+            if subdomain_scan['branded_domain']:
+                for item in subdomain_scan['branded_domain']:
+                    branded_records.append({
+                        'type': 'CNAME',
+                        'host': item['subdomain'],
+                        'required': GHL_SUBACCOUNT_CNAME,
+                        'current': item['cname'],
+                        'valid': True
+                    })
+            else:
+                branded_records.append({
+                    'type': 'CNAME',
+                    'host': f'[subdomain].{domain}',
+                    'required': GHL_SUBACCOUNT_CNAME,
+                    'current': None,
+                    'valid': False
+                })
+
+            features['branded_domain'] = {
+                'name': 'Branded Domain (Subdomain)',
+                'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/company',
+                'records': branded_records
+            }
+
+            # Client Portal - show discovered subdomains or indicate none found
+            portal_records = []
+            if subdomain_scan['client_portal']:
+                for item in subdomain_scan['client_portal']:
+                    portal_records.append({
+                        'type': 'CNAME',
+                        'host': item['subdomain'],
+                        'required': GHL_PORTAL_CNAME,
+                        'current': item['cname'],
+                        'valid': True
+                    })
+            else:
+                portal_records.append({
+                    'type': 'CNAME',
+                    'host': f'[subdomain].{domain}',
+                    'required': GHL_PORTAL_CNAME,
+                    'current': None,
+                    'valid': False
+                })
+
+            features['client_portal'] = {
+                'name': 'Client Portal (Subdomain)',
+                'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/memberships/client-portal/domain-setup',
+                'records': portal_records
+            }
+
+            # Sites/Funnels subdomains - show any discovered
+            if subdomain_scan['sites_funnels']:
+                subdomain_records = []
+                for item in subdomain_scan['sites_funnels']:
+                    subdomain_records.append({
+                        'type': 'CNAME',
+                        'host': item['subdomain'],
+                        'required': GHL_SITES_CNAME,
+                        'current': item['cname'],
+                        'valid': True
+                    })
+                features['sites_funnels_subdomains'] = {
+                    'name': 'Sites / Funnels (Subdomains)',
+                    'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/domain',
+                    'records': subdomain_records
+                }
 
     # Add email/sending domain feature
     if sending_domain_results:
@@ -437,7 +539,13 @@ def check_domain():
     connectivity = check_connectivity(domain)
     sending_domain = check_sending_domain(domain)
 
-    ghl_validation = validate_ghl_setup(dns_results, ssl_results, sending_domain)
+    # Scan subdomains for root domains
+    subdomain_scan = None
+    parts = domain.split('.')
+    if len(parts) == 2:  # Root domain
+        subdomain_scan = scan_subdomains(domain)
+
+    ghl_validation = validate_ghl_setup(dns_results, ssl_results, sending_domain, subdomain_scan)
 
     return jsonify({
         'domain': domain,

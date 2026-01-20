@@ -429,6 +429,10 @@
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
 
+        // Get location ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const locationId = urlParams.get('id') || '{{location.id}}';
+
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
@@ -574,7 +578,8 @@
                     `;
 
                     if (!allValid) {
-                        html += `<a href="${feature.setup_url}" target="_blank" rel="noopener noreferrer" class="setup-btn">Configure Now</a>`;
+                        const setupUrl = feature.setup_url.replace('{{location.id}}', locationId);
+                        html += `<a href="${setupUrl}" target="_blank" rel="noopener noreferrer" class="setup-btn">Configure Now</a>`;
                     }
 
                     html += `</div>`;

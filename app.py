@@ -274,19 +274,16 @@ def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
     parts = domain.split('.')
     is_subdomain = len(parts) > 2
 
-    # Get current CNAME for root domain if any
+    # Get current CNAME for the domain if any
     current_cname = None
     if dns_results.get('cname'):
         current_cname = dns_results['cname'][0] if dns_results['cname'] else None
 
-    # Look up www CNAME separately for root domains
-    www_cname = None
-    if not is_subdomain:
-        www_cname = lookup_cname(f'www.{domain}')
+    features = {}
 
-    # Build feature-centric validation
-    features = {
-        'branded_domain': {
+    if is_subdomain:
+        # For subdomains: check Branded Domain, Client Portal, Sites/Funnels CNAME
+        features['branded_domain'] = {
             'name': 'Branded Domain',
             'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/company',
             'records': [
@@ -298,28 +295,21 @@ def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
                     'valid': current_cname and GHL_SUBACCOUNT_CNAME in current_cname
                 }
             ]
-        },
-        'sites_funnels': {
+        }
+        features['sites_funnels'] = {
             'name': 'Sites / Funnels',
             'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/domain',
             'records': [
                 {
-                    'type': 'A',
-                    'host': '@',
-                    'required': GHL_SITES_A_RECORD,
-                    'current': ', '.join(dns_results.get('a_records', [])) or None,
-                    'valid': GHL_SITES_A_RECORD in dns_results.get('a_records', [])
-                },
-                {
                     'type': 'CNAME',
-                    'host': 'www',
+                    'host': domain,
                     'required': GHL_SITES_CNAME,
-                    'current': www_cname if not is_subdomain else current_cname,
-                    'valid': (www_cname and GHL_SITES_CNAME in www_cname) if not is_subdomain else (current_cname and GHL_SITES_CNAME in current_cname)
+                    'current': current_cname,
+                    'valid': current_cname and GHL_SITES_CNAME in current_cname
                 }
             ]
-        },
-        'client_portal': {
+        }
+        features['client_portal'] = {
             'name': 'Client Portal',
             'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/memberships/client-portal/domain-setup',
             'records': [
@@ -332,17 +322,46 @@ def validate_ghl_setup(dns_results, ssl_results, sending_domain_results=None):
                 }
             ]
         }
-    }
+    else:
+        # For root domains: check A record + www CNAME for Sites/Funnels
+        www_cname = lookup_cname(f'www.{domain}')
+
+        features['sites_funnels'] = {
+            'name': 'Sites / Funnels',
+            'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/domain',
+            'records': [
+                {
+                    'type': 'A',
+                    'host': f'@ ({domain})',
+                    'required': GHL_SITES_A_RECORD,
+                    'current': ', '.join(dns_results.get('a_records', [])) or None,
+                    'valid': GHL_SITES_A_RECORD in dns_results.get('a_records', [])
+                },
+                {
+                    'type': 'CNAME',
+                    'host': f'www.{domain}',
+                    'required': GHL_SITES_CNAME,
+                    'current': www_cname,
+                    'valid': www_cname and GHL_SITES_CNAME in www_cname
+                }
+            ]
+        }
 
     # Add email/sending domain feature
     if sending_domain_results:
+        # Determine the root domain for SPF display
+        if is_subdomain:
+            root_domain = '.'.join(parts[-2:])
+        else:
+            root_domain = domain
+
         features['sending_domain'] = {
             'name': 'Email / Sending Domain',
             'setup_url': 'https://app.gohighlevel.com/v2/location/{{location.id}}/settings/smtp_service/dedicated-domains',
             'records': [
                 {
                     'type': 'TXT (SPF)',
-                    'host': 'Root domain',
+                    'host': root_domain,
                     'required': 'v=spf1 include:spf.leadconnectorhq.com include:mailgun.org ~all',
                     'current': sending_domain_results['spf'].get('record'),
                     'valid': sending_domain_results['spf']['valid']

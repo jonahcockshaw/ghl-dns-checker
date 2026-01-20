@@ -284,9 +284,24 @@
         const loading = document.getElementById('loading');
         const resultsContainer = document.getElementById('results');
 
-        // Get location ID from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const locationId = urlParams.get('id') || '{{location.id}}';
+        // Detect HighLevel base URL and location ID from referrer (when embedded as iframe)
+        let hlBaseUrl = 'https://app.gohighlevel.com';
+        let locationId = '{{location.id}}';
+
+        if (document.referrer) {
+            try {
+                const referrerUrl = new URL(document.referrer);
+                hlBaseUrl = referrerUrl.origin;
+
+                // Extract location ID from path like /v2/location/LOCATION_ID/...
+                const locationMatch = referrerUrl.pathname.match(/\/v2\/location\/([^\/]+)/);
+                if (locationMatch) {
+                    locationId = locationMatch[1];
+                }
+            } catch (e) {
+                console.log('Could not parse referrer:', e);
+            }
+        }
 
         domainInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') checkBtn.click();
@@ -384,8 +399,10 @@
                     html += `</tbody></table>`;
 
                     if (!allValid) {
-                        const setupUrl = feature.setup_url.replace('{{location.id}}', locationId);
-                        html += `<a href="${setupUrl}" target="_blank" rel="noopener noreferrer" class="setup-btn">Configure Now</a>`;
+                        // Extract path from setup_url and build with detected HL base URL
+                        const setupPath = feature.setup_url.replace('https://app.gohighlevel.com', '').replace('{{location.id}}', locationId);
+                        const setupUrl = hlBaseUrl + setupPath;
+                        html += `<a href="${setupUrl}" target="_parent" rel="noopener noreferrer" class="setup-btn">Configure Now</a>`;
                     }
 
                     html += `</div>`;

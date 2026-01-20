@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHL DNS Checker</title>
+    <title>DNS Checker</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,203 +12,141 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fff;
             min-height: 100vh;
-            color: #fff;
-            padding: 20px;
+            color: #333;
+            padding: 40px 20px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
         header {
-            text-align: center;
-            padding: 40px 0;
+            margin-bottom: 40px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #00d4ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111;
         }
 
-        .subtitle {
-            color: #8892b0;
-            font-size: 1.1rem;
-        }
-
-        .tabs {
+        .search-box {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        .tab {
-            padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: #8892b0;
-        }
-
-        .tab:hover, .tab.active {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: #00d4ff;
-            color: #fff;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #8892b0;
-        }
-
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #fff;
             font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus, textarea:focus {
             outline: none;
-            border-color: #00d4ff;
+            transition: border-color 0.2s;
         }
 
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-            font-family: monospace;
+        input[type="text"]:focus {
+            border-color: #666;
         }
 
         button {
-            padding: 14px 32px;
-            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            padding: 12px 24px;
+            background: #111;
             border: none;
             border-radius: 8px;
-            color: #1a1a2e;
+            color: #fff;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background 0.2s;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+            background: #333;
         }
 
         button:disabled {
-            opacity: 0.5;
+            background: #ccc;
             cursor: not-allowed;
-            transform: none;
-        }
-
-        .hidden {
-            display: none;
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: #8892b0;
+            color: #666;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #00d4ff;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #eee;
+            border-top-color: #111;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .results {
-            margin-top: 30px;
+        .hidden {
+            display: none;
         }
 
         .result-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
+            margin-bottom: 30px;
         }
 
         .result-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
             padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
         }
 
         .domain-name {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 600;
         }
 
         .ssl-badge {
-            padding: 6px 14px;
+            font-size: 0.8rem;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
         }
 
         .ssl-valid {
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
+            background: #e6f9e6;
+            color: #1a7f1a;
         }
 
         .ssl-invalid {
-            background: rgba(255, 77, 77, 0.2);
-            color: #ff4d4d;
+            background: #ffe6e6;
+            color: #cc0000;
         }
 
         .feature-section {
             margin-bottom: 24px;
             padding: 16px;
-            background: rgba(255, 255, 255, 0.02);
+            background: #fafafa;
             border-radius: 8px;
-            border-left: 3px solid #8892b0;
+            border-left: 3px solid #ddd;
         }
 
         .feature-section.all-valid {
-            border-left-color: #00ff88;
+            border-left-color: #22c55e;
         }
 
         .feature-section.has-issues {
-            border-left-color: #ff4d4d;
+            border-left-color: #ef4444;
         }
 
         .feature-header {
@@ -219,192 +157,117 @@
         }
 
         .feature-name {
-            font-size: 1.1rem;
             font-weight: 600;
-            color: #fff;
+            color: #111;
         }
 
         .feature-status {
-            font-size: 0.85rem;
-            padding: 4px 10px;
-            border-radius: 12px;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
         }
 
         .status-configured {
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
+            background: #e6f9e6;
+            color: #1a7f1a;
         }
 
         .status-not-configured {
-            background: rgba(255, 77, 77, 0.2);
-            color: #ff4d4d;
+            background: #ffe6e6;
+            color: #cc0000;
         }
 
         .records-table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.85rem;
             margin-bottom: 12px;
         }
 
         .records-table th {
             text-align: left;
-            padding: 8px 12px;
-            color: #8892b0;
-            font-size: 0.75rem;
+            padding: 8px;
+            color: #666;
+            font-weight: 500;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.5px;
         }
 
         .records-table td {
-            padding: 10px 12px;
-            font-size: 0.9rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .records-table tr:last-child td {
-            border-bottom: none;
+            padding: 8px;
+            border-top: 1px solid #eee;
         }
 
         .record-status {
-            width: 30px;
-            text-align: center;
+            width: 24px;
         }
 
         .check-icon {
-            color: #00ff88;
-            font-weight: bold;
+            color: #22c55e;
         }
 
         .cross-icon {
-            color: #ff4d4d;
-            font-weight: bold;
+            color: #ef4444;
         }
 
         .record-type {
-            font-weight: 600;
-            color: #00d4ff;
-            white-space: nowrap;
+            font-weight: 500;
+            color: #111;
         }
 
         .record-host {
-            color: #8892b0;
+            color: #666;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
-        .record-required {
+        .record-value {
             font-family: monospace;
-            font-size: 0.85rem;
-            color: #8892b0;
+            font-size: 0.8rem;
+            color: #666;
             word-break: break-all;
         }
 
-        .record-current {
-            font-family: monospace;
-            font-size: 0.85rem;
-            word-break: break-all;
+        .record-value.valid {
+            color: #22c55e;
         }
 
-        .record-current.valid {
-            color: #00ff88;
+        .record-value.invalid {
+            color: #ef4444;
         }
 
-        .record-current.invalid {
-            color: #ff4d4d;
-        }
-
-        .record-current.missing {
-            color: #8892b0;
+        .record-value.missing {
+            color: #999;
             font-style: italic;
         }
 
         .setup-btn {
             display: inline-block;
-            padding: 10px 20px;
-            background: linear-gradient(90deg, #ff6b35, #f7931e);
-            border: none;
+            padding: 8px 16px;
+            background: #111;
             border-radius: 6px;
             color: #fff;
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 0.85rem;
+            font-weight: 500;
             text-decoration: none;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background 0.2s;
         }
 
         .setup-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
-        }
-
-        .bulk-progress {
-            margin-top: 16px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-        }
-
-        .progress-bar {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00d4ff, #00ff88);
-            transition: width 0.3s;
-        }
-
-        @media (max-width: 768px) {
-            .records-table {
-                display: block;
-                overflow-x: auto;
-            }
-
-            .feature-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
+            background: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>GHL DNS Checker</h1>
-            <p class="subtitle">Verify DNS configuration for your domains</p>
+            <h1>DNS Checker</h1>
         </header>
 
-        <div class="tabs">
-            <div class="tab active" data-tab="single">Single Domain</div>
-            <div class="tab" data-tab="bulk">Bulk Check</div>
-        </div>
-
-        <div id="single-tab" class="card">
-            <div class="input-group">
-                <label for="domain">Enter Domain</label>
-                <input type="text" id="domain" placeholder="example.com or subdomain.example.com" autocomplete="off">
-            </div>
-            <button id="check-btn">Check Domain</button>
-        </div>
-
-        <div id="bulk-tab" class="card hidden">
-            <div class="input-group">
-                <label for="domains">Enter Domains (one per line)</label>
-                <textarea id="domains" placeholder="example1.com&#10;subdomain.example2.com&#10;example3.com"></textarea>
-            </div>
-            <button id="bulk-check-btn">Check All Domains</button>
-            <div id="bulk-progress" class="bulk-progress hidden">
-                <span id="progress-text">Checking domains...</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-                </div>
-            </div>
+        <div class="search-box">
+            <input type="text" id="domain" placeholder="Enter domain (e.g. example.com)" autocomplete="off">
+            <button id="check-btn">Check</button>
         </div>
 
         <div id="loading" class="loading hidden">
@@ -412,50 +275,32 @@
             <p>Checking DNS records...</p>
         </div>
 
-        <div id="results" class="results"></div>
+        <div id="results"></div>
     </div>
 
     <script>
-        const tabs = document.querySelectorAll('.tab');
-        const singleTab = document.getElementById('single-tab');
-        const bulkTab = document.getElementById('bulk-tab');
         const domainInput = document.getElementById('domain');
-        const domainsTextarea = document.getElementById('domains');
         const checkBtn = document.getElementById('check-btn');
-        const bulkCheckBtn = document.getElementById('bulk-check-btn');
         const loading = document.getElementById('loading');
         const resultsContainer = document.getElementById('results');
-        const bulkProgress = document.getElementById('bulk-progress');
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
 
         // Get location ID from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const locationId = urlParams.get('id') || '{{location.id}}';
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                if (tab.dataset.tab === 'single') {
-                    singleTab.classList.remove('hidden');
-                    bulkTab.classList.add('hidden');
-                } else {
-                    singleTab.classList.add('hidden');
-                    bulkTab.classList.remove('hidden');
-                }
-                resultsContainer.innerHTML = '';
-            });
-        });
 
         domainInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') checkBtn.click();
         });
 
         checkBtn.addEventListener('click', async () => {
-            const domain = domainInput.value.trim();
+            let domain = domainInput.value.trim();
             if (!domain) return;
+
+            // Extract root domain if subdomain entered
+            const parts = domain.replace(/^(https?:\/\/)?/, '').split('/')[0].split('.');
+            if (parts.length > 2) {
+                domain = parts.slice(-2).join('.');
+            }
 
             loading.classList.remove('hidden');
             resultsContainer.innerHTML = '';
@@ -470,45 +315,10 @@
                 const data = await response.json();
                 displayResult(data);
             } catch (error) {
-                resultsContainer.innerHTML = `<div class="result-card"><p>Error: ${error.message}</p></div>`;
+                resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
             } finally {
                 loading.classList.add('hidden');
                 checkBtn.disabled = false;
-            }
-        });
-
-        bulkCheckBtn.addEventListener('click', async () => {
-            const domainsText = domainsTextarea.value.trim();
-            if (!domainsText) return;
-
-            const domains = domainsText.split('\n').filter(d => d.trim());
-            if (domains.length === 0) return;
-
-            bulkProgress.classList.remove('hidden');
-            progressFill.style.width = '0%';
-            progressText.textContent = `Checking ${domains.length} domains...`;
-            resultsContainer.innerHTML = '';
-            bulkCheckBtn.disabled = true;
-
-            try {
-                const response = await fetch('/api/bulk-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domains })
-                });
-                const data = await response.json();
-
-                progressFill.style.width = '100%';
-                progressText.textContent = `Completed checking ${domains.length} domains`;
-
-                if (data.results) {
-                    data.results.forEach(result => displayResult(result));
-                }
-            } catch (error) {
-                resultsContainer.innerHTML = `<div class="result-card"><p>Error: ${error.message}</p></div>`;
-            } finally {
-                bulkCheckBtn.disabled = false;
-                setTimeout(() => bulkProgress.classList.add('hidden'), 2000);
             }
         });
 
@@ -521,12 +331,11 @@
                     <div class="result-header">
                         <span class="domain-name">${data.domain}</span>
                         <span class="ssl-badge ${ssl?.valid ? 'ssl-valid' : 'ssl-invalid'}">
-                            SSL: ${ssl?.valid ? 'Valid' : (ssl?.error || 'Invalid')}
+                            SSL ${ssl?.valid ? 'Valid' : 'Invalid'}
                         </span>
                     </div>
             `;
 
-            // Display each feature
             if (features) {
                 for (const [key, feature] of Object.entries(features)) {
                     const allValid = feature.all_valid;
@@ -543,11 +352,11 @@
                             <table class="records-table">
                                 <thead>
                                     <tr>
-                                        <th class="record-status"></th>
+                                        <th></th>
                                         <th>Type</th>
                                         <th>Host</th>
-                                        <th>Required Value</th>
-                                        <th>Current Value</th>
+                                        <th>Required</th>
+                                        <th>Current</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -566,16 +375,13 @@
                                 <td class="record-status">${statusIcon}</td>
                                 <td class="record-type">${record.type}</td>
                                 <td class="record-host">${record.host}</td>
-                                <td class="record-required">${record.required}</td>
-                                <td class="record-current ${currentClass}">${currentValue}</td>
+                                <td class="record-value">${record.required}</td>
+                                <td class="record-value ${currentClass}">${currentValue}</td>
                             </tr>
                         `;
                     }
 
-                    html += `
-                                </tbody>
-                            </table>
-                    `;
+                    html += `</tbody></table>`;
 
                     if (!allValid) {
                         const setupUrl = feature.setup_url.replace('{{location.id}}', locationId);
@@ -587,7 +393,7 @@
             }
 
             html += '</div>';
-            resultsContainer.innerHTML += html;
+            resultsContainer.innerHTML = html;
         }
     </script>
 </body>
